@@ -1,13 +1,9 @@
 const fs = require('fs');
-const { getSchemaUrl, isObject, loadDatatypes, loadFile } = require('./util.js');
+const { isObject, loadDatatypes, loadSchema } = require('./util.js');
 const template = require('../assets/template.json');
 
 async function run(config) {
-  let schemaUrl = condig.schema;
-  if (!config.schema) {
-    schemaUrl = getSchemaUrl(config.fiboaVersion);
-  }
-  const coreSchema = await loadFile(schemaUrl);
+  const coreSchema = await loadSchema(config);
   const datatypes = await loadDatatypes(config.fiboaVersion);
   const schema = await createSchema(coreSchema, datatypes, config.id);
   if (config.out) {
