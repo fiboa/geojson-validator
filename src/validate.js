@@ -4,7 +4,7 @@ const addFormats = require('ajv-formats');
 const { createSchema } = require('./create_schema.js');
 const { getFiles, isObject, loadDatatypes, loadFile, loadSchema } = require('./util.js');
 
-const ALLOWED_EXTENSIONS = ['.json', '.geojson', '.parquet', '.geoparquet'];
+const ALLOWED_EXTENSIONS = ['.json', '.geojson'];
 
 // Create ajv instance for validation
 function createAjv(config) {
