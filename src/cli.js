@@ -28,8 +28,8 @@ function runCLI() {
       .option('fiboa-version', {
         alias: 'f',
         type: 'string',
-        default: '0.0.1',
-        description: 'The fiboa version to validate against. Default is the version given in the collection, or 0.0.1 if no collection is specified.'
+        default: '0.0.2',
+        description: 'The fiboa version to validate against. Default is the version given in the collection, or 0.0.2 if no collection is specified.'
       })
       .option('collection', {
         alias: 'c',
@@ -58,8 +58,8 @@ function runCLI() {
       .option('fiboa-version', {
         alias: 'f',
         type: 'string',
-        default: '0.0.1',
-        description: 'The fiboa version to work against. Default is 0.0.1.'
+        default: '0.0.2',
+        description: 'The fiboa version to work against. Default is 0.0.2.'
       })
       .option('id', {
         type: 'string',

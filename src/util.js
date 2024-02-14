@@ -77,7 +77,7 @@ async function loadDatatypes(version) {
 async function loadSchema(config) {
   let schemaUrl = config.schema;
   if (!config.schema) {
-    schemaUrl = `https://fiboa.github.io/specification/v${config.fiboaVersion}/schema.yml`
+    schemaUrl = `https://fiboa.github.io/specification/v${config.fiboaVersion}/schema.yaml`
   }
   return await loadFile(schemaUrl);
 }

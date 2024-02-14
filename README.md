@@ -17,7 +17,7 @@ To validate a fiboa GeoJSON file, you can for example run:
 
 To create a JSON Schema for a fiboa Schema YAML file, you can for example run:
 
-`fiboa-geojson-validator create-schema --id=https://fiboa.github.io/specification/v0.0.1/geojson/schema.json -o schema.json`
+`fiboa-geojson-validator create-schema --id=https://fiboa.github.io/specification/v0.0.2/geojson/schema.json -o schema.json`
 
 ## Development
 
