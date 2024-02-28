@@ -27,6 +27,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - ...
 
+## [v0.1.3] - 2024-02-28
+
+### Added
+
+- Allow to provide an extension mapping to a local file
+
 ## [v0.1.2] - 2024-02-14
 
 ### Changed

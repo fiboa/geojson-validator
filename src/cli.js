@@ -36,6 +36,12 @@ function runCLI() {
         type: 'string',
         default: null,
         description: 'Points to the STAC collection that defines the fiboa version and extensions.'
+      })
+      .option('ext-schema', {
+        alias: 'e',
+        type: 'array',
+        default: [],
+        description: 'Maps a remote fiboa extension schema url to a local file. First the URL, then the local file path. Separated with a comma character. Example: https://example.com/schema.json,/path/to/schema.json'
       }),
     validate
   )

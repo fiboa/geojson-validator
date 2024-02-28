@@ -29,6 +29,13 @@ async function validate(config) {
 	console.log(`fiboa GeoJSON Validator`);
 	console.log();
 
+  const extMapping = {};
+  for(const ext of config.extSchema) {
+    const [url, file] = ext.split(',', 2);
+    extMapping[url] = file;
+  }
+  config.extSchema = extMapping;
+
   // Create ajv instance for validation
   const ajv = createAjv(config);
 
@@ -50,7 +57,11 @@ async function validate(config) {
     if (Array.isArray(collection.fiboa_extensions)) {
       for (const ext of collection.fiboa_extensions) {
         try {
-          const extSchema = await loadFile(ext);
+          let uri = ext;
+          if (config.extSchema[ext]) {
+            uri = config.extSchema[ext];
+          }
+          const extSchema = await loadFile(uri);
           const jsonSchema = await createSchema(extSchema, datatypes);
           extensions[ext] = await ajv.compileAsync(jsonSchema);
         } catch (error) {
