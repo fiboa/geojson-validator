@@ -27,6 +27,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - ...
 
+## [v0.1.4] - 2024-02-28
+
+### Fixed
+
+- Fixed a bug that prevented working with extensions properly
+
 ## [v0.1.3] - 2024-02-28
 
 ### Added
@@ -49,7 +55,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - First release
 
-[Unreleased]: <https://github.com/radiantearth/stac-spec/compare/v0.1.2...main>
+[Unreleased]: <https://github.com/radiantearth/stac-spec/compare/v0.1.4...main>
+[v0.1.4]: <https://github.com/radiantearth/stac-spec/compare/v0.1.3...v0.1.4>
+[v0.1.3]: <https://github.com/radiantearth/stac-spec/compare/v0.1.2...v0.1.3>
 [v0.1.2]: <https://github.com/radiantearth/stac-spec/compare/v0.1.1...v0.1.2>
 [v0.1.1]: <https://github.com/radiantearth/stac-spec/compare/v0.1.0...v0.1.1>
 [v0.1.0]: <https://github.com/radiantearth/stac-spec/tree/v0.1.0>

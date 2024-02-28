@@ -49,42 +49,45 @@ async function validate(config) {
   let collection = null;
   let version = config.fiboaVersion;
   let versionInfo = `unknown (assuming ${version})`;
-  const extensions = {};
-  let extensionInfo = "unknown";
   const extErrors = [];
   if (config.collection) {
     collection = await loadFile(config.collection);
-    if (Array.isArray(collection.fiboa_extensions)) {
-      for (const ext of collection.fiboa_extensions) {
-        try {
-          let uri = ext;
-          if (config.extSchema[ext]) {
-            uri = config.extSchema[ext];
-          }
-          const extSchema = await loadFile(uri);
-          const jsonSchema = await createSchema(extSchema, datatypes);
-          extensions[ext] = await ajv.compileAsync(jsonSchema);
-        } catch (error) {
-          extensions[ext] = null;
-          extErrors.push(`Failed to load extension ${ext}: ${error}`);
-        }
-      }
-      extensionInfo = collection.fiboa_extensions.join(", ") || "none";
-    }
     if (typeof collection.fiboa_version === 'string') {
       version = collection.fiboa_version;
       versionInfo = collection.fiboa_version;
     }
   }
   console.log("fiboa version: " + versionInfo);
+
+  // Load datatypes
+  const datatypes = await loadDatatypes(version);
+
+  // Load extensions
+  const extensions = {};
+  let extensionInfo = "unknown";
+  if (collection && Array.isArray(collection.fiboa_extensions)) {
+    for (const ext of collection.fiboa_extensions) {
+      try {
+        let uri = ext;
+        if (config.extSchema[ext]) {
+          uri = config.extSchema[ext];
+        }
+        const extSchema = await loadFile(uri);
+        const jsonSchema = await createSchema(extSchema, datatypes);
+        extensions[ext] = await ajv.compileAsync(jsonSchema);
+      } catch (error) {
+        extensions[ext] = null;
+        extErrors.push(`Failed to load extension ${ext}: ${error}`);
+      }
+    }
+    extensionInfo = collection.fiboa_extensions.join(", ") || "none";
+  }
+
   console.log("fiboa extensions: " + extensionInfo);
   if (extErrors.length > 0) {
     extErrors.forEach(error => console.log(error));
   }
   console.log();
-
-  // Load datatypes
-  const datatypes = await loadDatatypes(version);
 
   // Compile schema for validation
   const schema = await loadSchema(config);

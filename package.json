@@ -1,6 +1,6 @@
 {
   "name": "@fiboa/geojson-validator",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "bin": {
     "fiboa-geojson-validator": "./bin/cli.js"
   },
