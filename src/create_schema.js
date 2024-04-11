@@ -1,17 +1,15 @@
-const fs = require('fs');
 const { isObject, loadDatatypes, loadSchema } = require('./util.js');
 const template = require('../assets/template.json');
 
-async function run(config) {
-  const coreSchema = await loadSchema(config);
+let logger = console.log;
+function setLogger(fn) {
+  logger = fn;
+}
+
+async function createSchemaFromConfig(config) {
+  const coreSchema = await loadSchema(config.schema, config.fiboaVersion);
   const datatypes = await loadDatatypes(config.fiboaVersion);
-  const schema = await createSchema(coreSchema, datatypes, config.id);
-  if (config.out) {
-    fs.writeFileSync(config.out, JSON.stringify(schema, null, 2));
-  }
-  else {
-    console.log(schema);
-  }
+  return await createSchema(coreSchema, datatypes, config.id);
 }
 
 async function createSchema(coreSchema, datatypes, id = null) {
@@ -29,11 +27,12 @@ async function createSchema(coreSchema, datatypes, id = null) {
   };
 
   for (const key in coreSchema.properties) {
+    const required = coreSchema.required.includes(key);
     const propSchema = coreSchema.properties[key];
-    const result = convertSchema(propSchema, datatypes);
+    const result = convertSchema(propSchema, datatypes, required);
 
     const place = geojsonRootProperties.includes(key) ? 'root' : 'properties';
-    if (result.required) {
+    if (required) {
       geojson[place].required.push(key);
     }
     geojson[place].properties[key] = result.schema;
@@ -49,7 +48,7 @@ async function createSchema(coreSchema, datatypes, id = null) {
 
   const merge = (target, source) => {
     if (Array.isArray(target.required)) {
-      for(const prop of source.required) {
+      for (const prop of source.required) {
         if (!target.required.includes(prop)) {
           target.required.push(prop);
         }
@@ -72,7 +71,7 @@ async function createSchema(coreSchema, datatypes, id = null) {
 }
 
 // merge the schema of the property into the schema for the data type if refers to
-function convertSchema(propSchema, datatypes) {
+function convertSchema(propSchema, datatypes, required = false) {
   if (!isObject(propSchema) || typeof propSchema.type === 'undefined') {
     return propSchema;
   }
@@ -83,7 +82,6 @@ function convertSchema(propSchema, datatypes) {
   let datatypeSchema = Object.assign({}, datatypes[propSchema.type]);
 
   // Allow null if the property is not required
-  const required = propSchema.required;
   if (required) {
     // If required, make sure that for external schemas null is not allowed
     if (datatypeSchema.$ref) {
@@ -119,7 +117,7 @@ function convertSchema(propSchema, datatypes) {
     } else if (Array.isArray(datatypeSchema.anyOf)) {
       datatypeSchema.anyOf.push({ type: "null" });
     } else {
-      console.warn(`Making schema ${JSON.stringify(datatypeSchema)} optional is not supported by this generator`);
+      logger(`Making schema ${JSON.stringify(datatypeSchema)} optional is not supported by this generator`);
     }
   }
 
@@ -158,7 +156,7 @@ function convertSchema(propSchema, datatypes) {
         datatypeSchema.required = [];
       }
       for (const propName in value) {
-        const result = convertSchema(value[propName], datatypes);
+        const result = convertSchema(value[propName], datatypes, value.required.includes(propName));
         datatypeSchema.properties[propName] = Object.assign(
           {},
           datatypeSchema.properties[propName],
@@ -181,4 +179,4 @@ function convertSchema(propSchema, datatypes) {
   };
 }
 
-module.exports = { createSchema, run };
+module.exports = { setLogger, createSchema, createSchemaFromConfig };

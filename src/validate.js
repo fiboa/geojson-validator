@@ -2,37 +2,51 @@ const path = require('path');
 const Ajv = require('ajv/dist/2020');
 const addFormats = require('ajv-formats');
 const { createSchema } = require('./create_schema.js');
-const { getFiles, isObject, loadDatatypes, loadFile, loadSchema } = require('./util.js');
+const { getCollection, getFiles, isObject, loadDatatypes, loadFile, loadSchema } = require('./util.js');
 
 const ALLOWED_EXTENSIONS = ['.json', '.geojson'];
+
+let logger = console.log;
+function setLogger(fn) {
+  logger = fn;
+}
 
 // Create ajv instance for validation
 function createAjv(config) {
   // Create ajv instance for JSON Schema draft 2020-12 (used by fiboa)
-	const instance = new Ajv({
-		allErrors: config.verbose,
-		logger: config.verbose ? console : false,
-		loadSchema: loadFile
-	});
+  const instance = new Ajv({
+    allErrors: config.verbose,
+    logger: config.verbose ? console : false,
+    loadSchema: loadFile
+  });
 
   // Add support for draft-07 (used by GeoJSON)
   const draft7MetaSchema = require("ajv/dist/refs/json-schema-draft-07.json")
   instance.addMetaSchema(draft7MetaSchema);
 
   // Add additional formats
-	addFormats(instance);
+  addFormats(instance);
 
-	return instance;
+  return instance;
 }
 
-async function validate(config) {
-	console.log(`fiboa GeoJSON Validator`);
-	console.log();
+function markInvalid(label, error, ext = null) {
+  if (ext) {
+    logger(`${label}: Extension ${ext} INVALID`);
+  }
+  else {
+    logger(`${label}: INVALID`);
+  }
+  logger(error);
+}
 
+async function validateFromConfig(config) {
   const extMapping = {};
-  for(const ext of config.extSchema) {
-    const [url, file] = ext.split(',', 2);
-    extMapping[url] = file;
+  if (Array.isArray(config.extSchema)) {
+    for (const ext of config.extSchema) {
+      const [url, file] = ext.split(',', 2);
+      extMapping[url] = file;
+    }
   }
   config.extSchema = extMapping;
 
@@ -41,73 +55,17 @@ async function validate(config) {
 
   // Expand folders to files
   const files = await getFiles(config.files, ALLOWED_EXTENSIONS);
-	if (files.length === 0) {
-		throw new Error('No files found.');
-	}
-
-  // Load collection
-  let collection = null;
-  let version = config.fiboaVersion;
-  let versionInfo = `unknown (assuming ${version})`;
-  const extErrors = [];
-  if (config.collection) {
-    collection = await loadFile(config.collection);
-    if (typeof collection.fiboa_version === 'string') {
-      version = collection.fiboa_version;
-      versionInfo = collection.fiboa_version;
-    }
+  if (files.length === 0) {
+    throw new Error('No files found.');
   }
-  console.log("fiboa version: " + versionInfo);
-
-  // Load datatypes
-  const datatypes = await loadDatatypes(version);
-
-  // Load extensions
-  const extensions = {};
-  let extensionInfo = "unknown";
-  if (collection && Array.isArray(collection.fiboa_extensions)) {
-    for (const ext of collection.fiboa_extensions) {
-      try {
-        let uri = ext;
-        if (config.extSchema[ext]) {
-          uri = config.extSchema[ext];
-        }
-        const extSchema = await loadFile(uri);
-        const jsonSchema = await createSchema(extSchema, datatypes);
-        extensions[ext] = await ajv.compileAsync(jsonSchema);
-      } catch (error) {
-        extensions[ext] = null;
-        extErrors.push(`Failed to load extension ${ext}: ${error}`);
-      }
-    }
-    extensionInfo = collection.fiboa_extensions.join(", ") || "none";
-  }
-
-  console.log("fiboa extensions: " + extensionInfo);
-  if (extErrors.length > 0) {
-    extErrors.forEach(error => console.log(error));
-  }
-  console.log();
-
-  // Compile schema for validation
-  const schema = await loadSchema(config);
-  const jsonSchema = await createSchema(schema, datatypes);
-  const ajvValidate = await ajv.compileAsync(jsonSchema);
-
-  const markInvalid = (label, error, ext = null) => {
-    if (ext) {
-      console.log(`${label}: Extension ${ext} INVALID`);
-    }
-    else {
-      console.log(`${label}: INVALID`);
-    }
-    console.log(error);
-  };
 
   // Validate
   let count = 0;
   let validCount = 0;
-  for(let file of files) {
+  for (let file of files) {
+    logger(`=== ${file} ===`);
+    count++;
+    // Load data
     let data;
     try {
       data = await loadFile(file);
@@ -121,6 +79,30 @@ async function validate(config) {
       continue;
     }
 
+    // Load collection
+    let version = config.fiboaVersion;
+    let collection = await getCollection(data, config.collection, file)
+    if (collection) {
+      if (typeof collection.fiboa_version === 'string') {
+        version = collection.fiboa_version;
+        logger("fiboa version: " + collection.fiboa_version);
+      }
+      else {
+        logger('No fiboa_version found in collection.');
+      }
+    }
+    else {
+      logger('No collection found.');
+    }
+
+    // Load datatypes
+    const datatypes = await loadDatatypes(version);
+
+    // Compile schema for validation
+    const schema = await loadSchema(config.schema, version);
+    const jsonSchema = await createSchema(schema, datatypes);
+    const ajvValidate = await ajv.compileAsync(jsonSchema);
+
     let features;
     if (data.type === "Feature") {
       features = [data];
@@ -130,7 +112,7 @@ async function validate(config) {
     }
     else if (data.type === "Collection") {
       if (config.collection && path.normalize(config.collection) !== path.normalize(file)) {
-        console.log(`${file}: SKIPPED (is likely a STAC Collection)`);
+        logger(`${file}: SKIPPED (is likely a STAC Collection)`);
       }
       continue;
     }
@@ -143,11 +125,45 @@ async function validate(config) {
       markInvalid(file, 'Must contain at least one Feature');
       continue;
     }
-    
-    for(const index in features) {
-      count++;
+
+    // Load extensions
+    const extensions = {};
+    const extErrors = [];
+    let extensionInfo = "none";
+    if (collection && Array.isArray(collection.fiboa_extensions) && collection.fiboa_extensions.length > 0) {
+      for (const ext of collection.fiboa_extensions) {
+        try {
+          let uri = ext;
+          if (config.extSchema[ext]) {
+            uri = config.extSchema[ext];
+          }
+          const extSchema = await loadFile(uri);
+          const jsonSchema = await createSchema(extSchema, datatypes);
+          extensions[ext] = await ajv.compileAsync(jsonSchema);
+        } catch (error) {
+          extensions[ext] = null;
+          extErrors.push(`Failed to load extension ${ext}: ${error}`);
+        }
+      }
+      extensionInfo = collection.fiboa_extensions.join(", ");
+    }
+
+    logger("fiboa extensions: " + extensionInfo);
+    if (extErrors.length > 0) {
+      extErrors.forEach(error => logger(error));
+    }
+
+    // Go through all features
+    for (const index in features) {
+      if (index > 0) {
+        logger();
+        count++;
+      }
       const feature = features[index];
-      const valid = ajvValidate(feature);
+      let valid = ajvValidate(feature);
+      if (valid && extErrors.length > 0) {
+        valid = false;
+      }
 
       let label = file;
       if (features.length > 1) {
@@ -162,7 +178,7 @@ async function validate(config) {
         markInvalid(label, ajvValidate.errors);
       }
       else {
-        for(const ext in extensions) {
+        for (const ext in extensions) {
           if (extensions[ext]) {
             const validExt = extensions[ext](feature);
             if (!validExt) {
@@ -171,39 +187,24 @@ async function validate(config) {
             }
           }
           else {
-            console.log(`${label}: Extension ${ext} SKIPPED`);
+            logger(`${label}: Extension ${ext} SKIPPED`);
           }
         }
         if (valid) {
-          console.log(`${label}: VALID`);
+          logger(`${label}: VALID`);
           validCount++;
         }
       }
-      console.log();
     }
   }
 
   const invalid = count - validCount;
-  if (invalid === 0) {
-    console.log('=== All features are VALID ===');
-  }
-  else if (invalid === 1) {
-    console.log(`=== 1 feature is INVALID ===`);
-  }
-  else {
-    console.log(`=== ${invalid} features are INVALID ===`);
-  }
+
+  return {
+    count: count,
+    valid: validCount,
+    invalid: invalid
+  };
 }
 
-async function run(config) {
-  config.files = config._.slice(1); // Remove the command "validate" from the files list
-  try {
-    await validate(config);
-    process.exit(0);
-  } catch (error) {
-    console.error(error);
-    process.exit(1);
-  }
-}
-
-module.exports = { validate, run };
+module.exports = { setLogger, validateFromConfig };
