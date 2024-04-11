@@ -27,6 +27,21 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - ...
 
+## [v0.2.0] - 2024-04-11
+
+### Added
+
+- Allow to use schema creation and validation in Browser env
+- Allow to set a logger
+
+### Changed
+
+- Switched to specification version 0.2.0
+
+### Fixed
+
+- Cache requests
+
 ## [v0.1.5] - 2024-02-28
 
 ### Fixed
@@ -61,10 +76,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - First release
 
-[Unreleased]: <https://github.com/radiantearth/stac-spec/compare/v0.1.5...main>
-[v0.1.5]: <https://github.com/radiantearth/stac-spec/compare/v0.1.4...v0.1.5>
-[v0.1.4]: <https://github.com/radiantearth/stac-spec/compare/v0.1.3...v0.1.4>
-[v0.1.3]: <https://github.com/radiantearth/stac-spec/compare/v0.1.2...v0.1.3>
-[v0.1.2]: <https://github.com/radiantearth/stac-spec/compare/v0.1.1...v0.1.2>
-[v0.1.1]: <https://github.com/radiantearth/stac-spec/compare/v0.1.0...v0.1.1>
-[v0.1.0]: <https://github.com/radiantearth/stac-spec/tree/v0.1.0>
+[Unreleased]: <https://github.com/fiboa/geojson-validator/compare/v0.2.0...main>
+[v0.2.0]: <https://github.com/fiboa/geojson-validator/compare/v0.1.5...v0.2.0>
+[v0.1.5]: <https://github.com/fiboa/geojson-validator/compare/v0.1.4...v0.1.5>
+[v0.1.4]: <https://github.com/fiboa/geojson-validator/compare/v0.1.3...v0.1.4>
+[v0.1.3]: <https://github.com/fiboa/geojson-validator/compare/v0.1.2...v0.1.3>
+[v0.1.2]: <https://github.com/fiboa/geojson-validator/compare/v0.1.1...v0.1.2>
+[v0.1.1]: <https://github.com/fiboa/geojson-validator/compare/v0.1.0...v0.1.1>
+[v0.1.0]: <https://github.com/fiboa/geojson-validator/tree/v0.1.0>
