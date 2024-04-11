@@ -25,4 +25,6 @@ Check `fiboa-geojson-validator create-schema --help` for more details.
 
 ## Development
 
-In a development environment use `npm run validator --` instead of `fiboa-geojson-validator`.
+In a development environment use:
+- `npm run create-schema --` instead of `fiboa-geojson-validator create-schema`
+- `npm run validate --` instead of `fiboa-geojson-validator validate`

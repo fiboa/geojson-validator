@@ -5,7 +5,9 @@
     "fiboa-geojson-validator": "./bin/cli.js"
   },
   "scripts": {
-    "validator": "node ./bin/cli.js"
+    "create-schema": "node ./bin/cli.js create-schema",
+    "validator": "node ./bin/cli.js validate",
+    "test": "jest"
   },
   "files": [
     "bin/cli.js",
@@ -28,5 +30,8 @@
     "axios": "^1.6.7",
     "yaml": "^2.3.4",
     "yargs": "^17.7.2"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
   }
 }
