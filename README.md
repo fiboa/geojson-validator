@@ -1,8 +1,7 @@
 # fiboa GeoJSON Validator
 
-In order to make working with fiboa easier we have developed a GeoJSON validation tool. To get started with the fiboa GeoJSON Validator please follow the instructions below:
+In order to make working with fiboa easier we have developed a GeoJSON validation tool. To get started with the fiboa GeoJSON Validator please follow the instructions below.
 
-Validator for the fiboa GeoJSON encoding.
 
 ## Installation
 
